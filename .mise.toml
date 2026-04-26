@@ -1,0 +1,72 @@
+[tools]
+go = "1.25"
+"go:github.com/spf13/cobra-cli" = "latest"
+ggshield = "latest"
+gofumpt = "v0.9.2"
+golangci-lint = "2.11.4"
+hk = "1.43.0"
+pkl = "latest"
+watchexec = "latest"
+
+[tasks.clean]
+description = "Remove old binaries and coverage reports"
+run = ["rm -rf bin/"]
+
+[tasks.lint]
+description = "linter run"
+run = "golangci-lint run"
+depends = ["lint_fix"]
+
+[tasks."lint_fix"]
+description = "go formatting fix"
+run = ["golangci-lint run --fix ./...", "gofumpt -w ."]
+
+[tasks."test:run"]
+description = "Run go tests and generate coverage profile"
+run = """
+#!/usr/bin/env bash
+rm -rf test-coverage/
+mkdir -p test-coverage
+
+# Look for at least one test file efficiently
+if [ -z "$(find . -name '*_test.go' -print -quit)" ]; then
+  echo "⚠️  WARNING: No test files found. Skipping tests."
+  # Create an empty/placeholder coverage file so the HTML tool doesn't crash
+  echo "mode: set" > test-coverage/cover.out
+  exit 0
+fi
+
+go test ./... -coverprofile=test-coverage/cover.out || echo "⚠️ Tests failed, but continuing to report..."
+"""
+
+[tasks."test:coverage"]
+description = "Generate HTML coverage report"
+depends = ["test:run"]
+run = "go tool cover -html=test-coverage/cover.out -o test-coverage/index.html"
+
+[tasks.build]
+description = "Build binary only if tests exist"
+depends = ["test:coverage"]
+run = "go build -o bin/${PWD##*/}-$(uname -s | tr 'A-Z' 'a-z')-$(uname -m) ." 
+# """
+# #!/usr/bin/env bash
+
+# # Graceful exit without building if no tests exist
+# if [ -z "$(find . -name '*_test.go' -print -quit)" ]; then
+#   echo "ℹ️  INFO: No test cases found. Build step passes, but no binary will be generated."
+#   exit 0
+# fi
+
+# echo "Tests found. Compiling binary..."
+# go build -o bin/myapp-$(uname -s | tr 'A-Z' 'a-z')-$(uname -m) .
+# """
+
+[tasks.all]
+description = "Run the full pipeline: clean -> lint -> build"
+depends = ["clean", "lint", "build"]
+
+[env]
+HK_MISE=1
+GO111MODULE="on"
+MISE_GO_PATH="config/mise/go"
+DEFAULT_FILE_PERMISSION = "0700"

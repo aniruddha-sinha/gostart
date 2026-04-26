@@ -1,0 +1,41 @@
+version: "2"
+
+run:
+  # The default timeout is 1m, which can be too short for larger projects or CI environments.
+  timeout: 5m
+  # Exit with code 1 on errors, 0 on success. Matches your pipeline needs.
+  issues-exit-code: 1
+  # Include test files in the linting process.
+  tests: true
+
+formatters:
+  enable:
+    - gofumpt       # A stricter, more standard formatter than gofmt.
+  settings:
+    gofumpt:
+      # Choose whether to use the extra rules that gofumpt provides.
+      extra-rules: true
+
+linters:
+  # Disable all linters first to maintain strict control over what is running.
+  disable-all: true
+  enable:
+    # --- Core Go Linters (The Essentials) ---
+    - errcheck      # Checks for unchecked errors in Go programs.
+    - govet         # Reports suspicious constructs, such as Printf calls with wrong arguments.
+    - ineffassign   # Detects when assignments to existing variables are not used.
+    - staticcheck   # A massive suite of analyzers that catch bugs and performance issues.
+
+    # --- Formatting and Style ---
+    - misspell      # Finds commonly misspelled English words in comments and strings.
+
+    # --- API & Security (Crucial for REST/OAuth apps) ---
+    - bodyclose     # Checks whether HTTP response bodies are closed successfully (prevents memory leaks).
+    - gosec         # Inspects source code for security problems (hardcoded credentials, bad crypto, etc.).
+    - noctx         # Finds HTTP requests sent without context.Context.
+  
+  settings:
+    gosec:
+      # Exclude certain rules if they become too noisy (e.g., G104 for unhandled errors, since errcheck handles that).
+      excludes:
+        - G104

@@ -1,0 +1,34 @@
+amends "package://github.com/jdx/hk/releases/download/v1.43.0/hk@1.43.0#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v1.43.0/hk@1.43.0#/Builtins.pkl"
+
+hooks {
+  ["pre-commit"] {
+    steps {
+      ["fmt"] {
+        check = "gofmt -l {{files}} && gofumpt -l ."
+        fix = "gofmt -w {{files}} && gofumpt -w ."
+        glob = "**/*.go"
+      }
+
+      ["lint"] {
+        // Run against all packages instead of a list of specific files
+        check = "golangci-lint run ./..."
+        // Keep the glob so this step only triggers when a .go file actually changes
+        glob = "**/*.go"
+      }
+
+
+      ["mod-tidy"] {
+        // Fails if go mod tidy would change the files, preventing messy mod files
+        check = "go mod tidy && git diff --exit-code go.mod go.sum"
+        fix = "go mod tidy"
+        glob = "**/go.mod"
+      }
+
+      ["secrets"] {
+        // Catch accidentally committed API keys or OAuth secrets
+        check = "ggshield secret scan pre-commit"
+      }
+    }
+  }
+}
