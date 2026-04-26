@@ -1,0 +1,36 @@
+name: Gojira CI Pipeline
+
+# Trigger the workflow on pushes and pull requests to the main branch
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  validate-and-build:
+    # Use the latest Ubuntu environment
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v6 # Updated for Node 24
+
+      # Step 2: Setup Mise (Reads .mise.toml, installs Go 1.25.0 and golangci-lint)
+      - name: Setup Mise
+        uses: jdx/mise-action@v4 # Updated for Node 24
+        with:
+          install: true 
+
+      # Step 3: Run your lint task
+      - name: Run all tasks
+        run: mise --verbose run all
+
+      # Step 4: Save the compiled binary so you can download it from GitHub
+      - name: Upload Binary Artifact
+        uses: actions/upload-artifact@v6 # Updated for Node 24
+        with:
+          name: gojira-binary
+          path: bin/*
+          retention-days: 7
