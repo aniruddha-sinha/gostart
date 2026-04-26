@@ -1,0 +1,57 @@
+# =========================
+# Go Build & Test Artifacts
+# =========================
+# Ignore standard compiled executables and shared libraries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Ignore the specific build output directory
+bin/
+
+# Ignore test binaries, profiling data, and coverage reports
+*.test
+*.out
+test-coverage/
+
+# =========================
+# Go Workspace
+# =========================
+# Ignore local workspace files (used for local multi-module development)
+go.work
+go.work.sum
+
+# =========================
+# Environment & Secrets
+# =========================
+# Never commit environment variables or local credentials
+.env
+.env.local
+.env.*
+*.pem
+*.key
+
+# =========================
+# Editors & OS Files
+# =========================
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains / GoLand
+.idea/
+*.iml
+
+# Vim / Emacs (Common in headless/SSH environments)
+*.swp
+*.swo
+*~
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
