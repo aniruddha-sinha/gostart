@@ -81,14 +81,6 @@ func (u UmbrellaConfig) OrchestrateGoProjectCreation() error {
 		return fmt.Errorf("problems encountered when initialising go project %v", err)
 	}
 
-	slog.Info("initialise Go Module")
-	output, err := u.initialiseGoModule()
-	if err != nil {
-		return fmt.Errorf("failed to initialise Go module %v", err)
-	} else {
-		slog.Info("Go mod init ", "output ", string(output))
-	}
-
 	slog.Info("Mise")
 	if !u.SkipMise {
 		slog.Info("Configuring mise env")
@@ -104,15 +96,23 @@ func (u UmbrellaConfig) OrchestrateGoProjectCreation() error {
 
 		slog.Info("mise trust ", "output ", string(output))
 
+		slog.Info("initialise Go Module")
+		outputGoInit, err1 := u.initialiseGoModule()
+		if err != nil {
+			return fmt.Errorf("failed to initialise Go module %v", err1)
+		} else {
+			slog.Info("Go mod init ", "output ", string(outputGoInit))
+		}
+
 		slog.Info("Run cobra-cli init")
-		cobraCliOut, err1 := u.cobraCLIInitialise()
+		cobraCliOut, err2 := u.cobraCLIInitialise()
 		if err1 != nil {
-			return fmt.Errorf("problems encountered while running cobra-cli init %v", err1)
+			return fmt.Errorf("problems encountered while running cobra-cli init %v", err2)
 		}
 
 		slog.Info("cobra-cli init ", "output ", string(cobraCliOut))
 	} else {
-		slog.Info("Skipping Mise Configuration")
+		slog.Info("Skipping Mise Configuration; make sure you have golang installed; for now skipping go mod init; just exiting with dir creation")
 	}
 
 	slog.Info("Go Project Created")
