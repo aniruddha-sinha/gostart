@@ -2,7 +2,6 @@ name: Release
 
 on:
   push:
-    # Trigger only on semantic version tags (e.g., v1.0.0, v2.1.3-beta)
     tags:
       - "v*.*.*" 
 
@@ -10,20 +9,19 @@ jobs:
   goreleaser:
     runs-on: ubuntu-latest
     permissions:
-      # Required to allow the Action to publish a Release on your repository
       contents: write 
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
-          # Required by GoReleaser to read the commit history for the changelog
           fetch-depth: 0 
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
+      - name: Setup mise and install tools
+        uses: jdx/mise-action@v2
         with:
-          go-version: "1.25.0"
+          version: "2026.4.22" # this is temporary
+          install: true
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
