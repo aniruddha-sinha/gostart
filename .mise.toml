@@ -68,5 +68,3 @@ depends = ["clean", "lint", "build"]
 [env]
 HK_MISE=1
 GO111MODULE="on"
-MISE_GO_PATH="mise/preconfigured/go/mise-golang"
-DEFAULT_FILE_PERMISSION = "0700"

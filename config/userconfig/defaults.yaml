@@ -1,0 +1,4 @@
+# config/defaults.yaml
+default_file_permission: "0755"
+mise_go_path: "mise/preconfigured/go/mise-golang"
+# Add any other defaults your CLI needs here
