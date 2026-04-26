@@ -10,7 +10,7 @@ watchexec = "latest"
 
 [tasks.clean]
 description = "Remove old binaries and coverage reports"
-run = "rm -rf bin/ test-coverage/"
+run = ["rm -rf bin/"]
 
 [tasks.lint]
 description = "linter run"
@@ -25,6 +25,7 @@ run = ["golangci-lint run --fix ./...", "gofumpt -w ."]
 description = "Run go tests and generate coverage profile"
 run = """
 #!/usr/bin/env bash
+rm -rf test-coverage/
 mkdir -p test-coverage
 
 # Look for at least one test file efficiently
@@ -46,11 +47,19 @@ run = "go tool cover -html=test-coverage/cover.out -o test-coverage/index.html"
 [tasks.build]
 description = "Build binary only if tests exist"
 depends = ["test:coverage"]
-run = "go build -o bin/${PWD##*/}-$(uname -s | tr 'A-Z' 'a-z')-$(uname -m) ."
+run = "go build -o bin/${PWD##*/}-$(uname -s | tr 'A-Z' 'a-z')-$(uname -m) ." 
+# """
+# #!/usr/bin/env bash
 
-echo "Tests found. Compiling binary..."
-go build -o bin/gojira .
-"""
+# # Graceful exit without building if no tests exist
+# if [ -z "$(find . -name '*_test.go' -print -quit)" ]; then
+#   echo "ℹ️  INFO: No test cases found. Build step passes, but no binary will be generated."
+#   exit 0
+# fi
+
+# echo "Tests found. Compiling binary..."
+# go build -o bin/myapp-$(uname -s | tr 'A-Z' 'a-z')-$(uname -m) .
+# """
 
 [tasks.all]
 description = "Run the full pipeline: clean -> lint -> build"

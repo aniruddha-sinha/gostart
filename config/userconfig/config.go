@@ -19,6 +19,7 @@ func LoadConfig() (AppConfig, error) {
 	if err := viper.BindEnv("MISE_GO_PATH"); err != nil {
 		return AppConfig{}, fmt.Errorf("error reading config %v", err)
 	}
+
 	if err := viper.BindEnv("DEFAULT_FILE_PERMISSION"); err != nil {
 		return AppConfig{}, fmt.Errorf("error reading config %v", err)
 	}

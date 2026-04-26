@@ -14,6 +14,7 @@ var (
 	baseDevDir  string
 	projectName string
 	skipMise    bool
+	moduleName  string
 )
 
 // addCmd represents the add command
@@ -33,6 +34,8 @@ var goCmd = &cobra.Command{
 			ProjectName:          projectName,
 			SkipMise:             skipMise,
 			FileSystemOperations: internal.OSOperations{},
+			OSExecutions:         internal.OSExecutions{},
+			GoModuleName:         moduleName,
 		}
 
 		err := umbrellaCfg.OrchestrateGoProjectCreation()
@@ -50,4 +53,5 @@ func init() {
 	goCmd.Flags().StringVarP(&baseDevDir, "base-dir", "d", "", "The base dev directory where you want to create the go project")
 	goCmd.Flags().StringVarP(&projectName, "proj", "p", "", "The name of the Golang project")
 	goCmd.Flags().BoolVarP(&skipMise, "skip-mise", "s", false, "Skip mise configuration for the current project; do it only if you have system levels tools installed")
+	goCmd.Flags().StringVarP(&moduleName, "module-name", "m", "", "The name of the go module")
 }
