@@ -1,4 +1,4 @@
-name: Gojira CI Pipeline
+name: gostart CI Pipeline
 
 # Trigger the workflow on pushes and pull requests to the main branch
 on:
@@ -31,6 +31,6 @@ jobs:
       - name: Upload Binary Artifact
         uses: actions/upload-artifact@v6 # Updated for Node 24
         with:
-          name: gojira-binary
+          name: gostart-binary
           path: bin/*
           retention-days: 7
