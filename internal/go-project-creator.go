@@ -22,6 +22,7 @@ type OSOpAbstractions interface {
 
 type OSExecAbstraction interface {
 	CommandContext(ctx context.Context, name string, arg ...string) *exec.Cmd
+	Look(file string) (string, error)
 }
 
 type (
@@ -55,10 +56,20 @@ func (oex OSExecutions) CommandContext(ctx context.Context, name string, arg ...
 	return exec.CommandContext(ctx, name, arg...)
 }
 
+func (oex OSExecutions) LookPath(file string) (string, error) {
+	return exec.LookPath(file)
+}
+
 func (u UmbrellaConfig) OrchestrateGoProjectCreation() error {
 	slog.Info("Base Dev Dir ", "dirpath ", u.BaseDir)
 	slog.Info("Project Name ", "name ", u.ProjectName)
 	slog.Info("Use Mise ", "= ", u.SkipMise)
+
+	slog.Info("validating Dependencies")
+	slog.Info("Running pre-flight dependency checks...")
+	if err := u.validateDependencies(); err != nil {
+		return err
+	}
 
 	slog.Info("Validating the base Directory...")
 	if err := u.validateBaseDir(); err != nil {
@@ -105,6 +116,22 @@ func (u UmbrellaConfig) OrchestrateGoProjectCreation() error {
 	}
 
 	slog.Info("Go Project Created")
+
+	return nil
+}
+
+func (u UmbrellaConfig) validateDependencies() error {
+	// exec.LookPath searches the system $PATH for the executable
+	if _, err := u.OSExecutions.LookPath("go"); err != nil {
+		return fmt.Errorf("the 'go' command is required but was not found in your $PATH. Please ensure Go is installed")
+	}
+
+	// If you rely on mise to be installed globally for the user, check for it too!
+	if !u.SkipMise {
+		if _, err := u.OSExecutions.LookPath("mise"); err != nil {
+			return fmt.Errorf("the 'mise' command was not found. Install it, or run with --skip-mise")
+		}
+	}
 
 	return nil
 }
