@@ -95,7 +95,7 @@ func (u UmbrellaConfig) OrchestrateGoProjectCreation() error {
 
 		slog.Info("Run cobra-cli init")
 		cobraCliOut, err1 := u.cobraCLIInitialise()
-		if err != nil {
+		if err1 != nil {
 			return fmt.Errorf("problems encountered while running cobra-cli init %v", err1)
 		}
 
