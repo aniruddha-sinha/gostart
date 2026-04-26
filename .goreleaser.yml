@@ -9,7 +9,7 @@ builds:
     goarch:
       - amd64
       - arm64
-    binary: gojira
+    binary: gostart-$(uname -s | tr 'A-Z' 'a-z')-$(uname -m)
 
 # Automatically generates a clean changelog based on your git commits
 changelog:
