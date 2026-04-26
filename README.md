@@ -2,6 +2,10 @@
 
 A lightweight CLI tool designed to rapidly scaffold new [Cobra](https://github.com/spf13/cobra)-based Go projects. `gostart` automates the boilerplate of setting up a modern Go application, complete with a modular directory structure and out-of-the-box support for [Mise](https://mise.jdx.dev/) task automation.
 
+example
+```SHELL
+./bin/gostart-linux-x86_64 add go --base-dir "/home/rexo/dev/go/learning" --proj automated-go-proj --module-name github.com/aniruddha-sinha/automated-go-proj
+```
 ## Features
 
 - **Rapid Scaffolding**: Instantly generates a clean project structure suitable for CLI applications.
