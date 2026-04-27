@@ -265,7 +265,7 @@ func (u UmbrellaConfig) execMiseInstall() ([]byte, error) {
 func (u UmbrellaConfig) cobraCLIInitialise() ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	cmd := u.OSExecutions.CommandContext(ctx, "cobra-cli", "init")
+	cmd := u.OSExecutions.CommandContext(ctx, "mise", "exec", "--", "cobra-cli", "init")
 
 	projectPath := filepath.Join(u.BaseDir, u.ProjectName)
 	cmd.Dir = projectPath
@@ -274,7 +274,7 @@ func (u UmbrellaConfig) cobraCLIInitialise() ([]byte, error) {
 	if err != nil {
 		// If the error was caused by the timeout
 		if ctx.Err() == context.DeadlineExceeded {
-			return []byte{}, fmt.Errorf("go mod init timed out after 30 seconds: %w", err)
+			return []byte{}, fmt.Errorf("cobra-cli init timed out after 30 seconds: %w", err)
 		}
 		return []byte{}, fmt.Errorf("failed to run \"cobra-cli init\": %w\nDetails: %s", err, string(output))
 	}
