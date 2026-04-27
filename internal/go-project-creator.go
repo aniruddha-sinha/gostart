@@ -63,13 +63,7 @@ func (oex OSExecutions) LookPath(file string) (string, error) {
 func (u UmbrellaConfig) OrchestrateGoProjectCreation() error {
 	slog.Info("Base Dev Dir ", "dirpath ", u.BaseDir)
 	slog.Info("Project Name ", "name ", u.ProjectName)
-	slog.Info("Use Mise ", "= ", u.SkipMise)
-
-	slog.Info("validating Dependencies")
-	slog.Info("Running pre-flight dependency checks...")
-	if err := u.validateDependencies(); err != nil {
-		return err
-	}
+	slog.Info("Skip Mise ", "= ", u.SkipMise)
 
 	slog.Info("Validating the base Directory...")
 	if err := u.validateBaseDir(); err != nil {
@@ -83,56 +77,66 @@ func (u UmbrellaConfig) OrchestrateGoProjectCreation() error {
 
 	slog.Info("Mise")
 	if !u.SkipMise {
+		slog.Info("Writing .mise.toml configuration...")
+		if err := u.configureMise(); err != nil {
+			return fmt.Errorf("problems encountered while configuring mise %v", err)
+		}
+
+		// We must trust the file before we can use it
+		slog.Info("Trusting the new .mise.toml file...")
+		if _, err := u.execMiseTrust(); err != nil {
+			return fmt.Errorf("problems encountered while running mise trust: %v", err)
+		}
+
 		slog.Info("Configuring mise env")
 		if err := u.configureMise(); err != nil {
 			return fmt.Errorf("problems encountered while configuring mise %v", err)
 		}
 
 		slog.Info("Run mise trust")
-		output, err := u.execMiseTrust()
-		if err != nil {
-			return fmt.Errorf("problems encountered while running mise trust %v", err)
+		output, err00 := u.execMiseTrust()
+		if err00 != nil {
+			return fmt.Errorf("problems encountered while running mise trust %v", err00)
 		}
 
 		slog.Info("mise trust ", "output ", string(output))
 
-		slog.Info("initialise Go Module")
-		outputGoInit, err1 := u.initialiseGoModule()
-		if err != nil {
-			return fmt.Errorf("failed to initialise Go module %v", err1)
+		slog.Info("Run mise intall")
+		outputMiseInstall, err01 := u.execMiseInstall()
+		if err01 != nil {
+			return fmt.Errorf("problems encountered while running mise install %v", err01)
 		} else {
-			slog.Info("Go mod init ", "output ", string(outputGoInit))
+			slog.Info("mise run all", "output ", string(outputMiseInstall))
 		}
 
-		slog.Info("Run cobra-cli init")
-		cobraCliOut, err2 := u.cobraCLIInitialise()
-		if err1 != nil {
-			return fmt.Errorf("problems encountered while running cobra-cli init %v", err2)
+		slog.Info("validating Dependencies")
+		if err02 := u.validateDependencies(); err02 != nil {
+			return fmt.Errorf("failed to validate dependencies %v", err02)
 		}
 
-		slog.Info("cobra-cli init ", "output ", string(cobraCliOut))
-	} else {
-		slog.Info("Skipping Mise Configuration; make sure you have golang installed; for now skipping go mod init; just exiting with dir creation")
+		slog.Info("Initialising Go Module...")
+		outputInitGoMod, err03 := u.initialiseGoModule()
+		if err03 != nil {
+			return fmt.Errorf("failed to initialise Go module %v", err03)
+		}
+		slog.Info("Go mod init output", "output", string(outputInitGoMod))
+
+		slog.Info("Running cobra-cli init...")
+		cobraCliOut, err := u.cobraCLIInitialise()
+		if err != nil {
+			return fmt.Errorf("problems encountered while running cobra-cli init %v", err)
+		}
+		slog.Debug("cobra-cli init output", "output", string(cobraCliOut))
 	}
 
-	slog.Info("Go Project Created")
-
+	slog.Info("Go Project Created Successfully!")
 	return nil
 }
 
 func (u UmbrellaConfig) validateDependencies() error {
-	// exec.LookPath searches the system $PATH for the executable
-	if _, err := u.OSExecutions.LookPath("go"); err != nil {
-		return fmt.Errorf("the 'go' command is required but was not found in your $PATH. Please ensure Go is installed")
+	if _, err := u.OSExecutions.LookPath("mise"); err != nil {
+		return fmt.Errorf("the 'mise' command was not found in your $PATH. Please install it first")
 	}
-
-	// If you rely on mise to be installed globally for the user, check for it too!
-	if !u.SkipMise {
-		if _, err := u.OSExecutions.LookPath("mise"); err != nil {
-			return fmt.Errorf("the 'mise' command was not found. Install it, or run with --skip-mise")
-		}
-	}
-
 	return nil
 }
 
@@ -175,7 +179,7 @@ func (u UmbrellaConfig) createProjectDirectory() error {
 func (u *UmbrellaConfig) initialiseGoModule() ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	cmd := u.OSExecutions.CommandContext(ctx, "go", "mod", "init", u.GoModuleName)
+	cmd := u.OSExecutions.CommandContext(ctx, "mise", "exec", "--", "go", "mod", "init", u.GoModuleName)
 
 	projectPath := filepath.Join(u.BaseDir, u.ProjectName)
 	cmd.Dir = projectPath
@@ -233,6 +237,26 @@ func (u UmbrellaConfig) execMiseTrust() ([]byte, error) {
 			return []byte{}, fmt.Errorf("go mod init timed out after 30 seconds: %w", err)
 		}
 		return []byte{}, fmt.Errorf("failed to run \"mise trust\": %w\nDetails: %s", err, string(output))
+	}
+
+	return output, nil
+}
+
+func (u UmbrellaConfig) execMiseInstall() ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	cmd := u.OSExecutions.CommandContext(ctx, "mise", "install")
+
+	projectPath := filepath.Join(u.BaseDir, u.ProjectName)
+	cmd.Dir = projectPath
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		// If the error was caused by the timeout
+		if ctx.Err() == context.DeadlineExceeded {
+			return []byte{}, fmt.Errorf("mise install out after 30 seconds: %w", err)
+		}
+		return []byte{}, fmt.Errorf("failed to run \"mise install\": %w\nDetails: %s", err, string(output))
 	}
 
 	return output, nil
